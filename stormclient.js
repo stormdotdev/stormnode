@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const VERSION = '0.1.0';
+const VERSION = require(__dirname + '/package.json').version;
 const yargs = require('yargs');
 
 const argv = yargs
@@ -9,10 +9,11 @@ const argv = yargs
   .help()
   .version(VERSION)
   .alias('h', 'help')
-  .default('c', __dirname + '/storm_client.json')
+  .default('c', './storm_client.json')
   .alias('c', 'config')
   .argv;
 
+const clientOptions = requireClientOptionsOrFail(argv.config);
 const mqtt = require('mqtt');
 const http = require('http');
 const https = require('https');
@@ -20,7 +21,6 @@ const https = require('https');
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e6;
 
-const clientOptions = require(argv.config);
 const ownTopic = `joinstorm/clients/${clientOptions.clientId}/status`;
 
 const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://joinstorm.io:8883', buildConnectOptions(clientOptions, ownTopic));
@@ -236,4 +236,15 @@ function sendHello() {
       reject(null);
     });
   });
+}
+
+function requireClientOptionsOrFail(config) {
+  const pathResolve = require('path').resolve;
+
+  try {
+    return require(pathResolve(config));
+  } catch (e) {
+    yargs.showHelp();
+    process.exit(1);
+  }
 }
