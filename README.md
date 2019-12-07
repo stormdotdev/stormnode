@@ -14,7 +14,13 @@ These instructions will get you a copy of the project up and running on your loc
  - You must have an account on joinstorm.io to access our network. Please register [here](https://joinstorm.io/register) to join our community
  - NodeJs & npm
 
-## Installing
+## Setup
+> npm install -g stormclient
+
+Check installation with:
+> stormclient --version
+
+## Local Install
 
 clone this repo:
 > git clone https://github.com/joinstormio/stormclient.git
