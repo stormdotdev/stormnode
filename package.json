@@ -1,0 +1,34 @@
+{
+  "name": "stormclient",
+  "version": "0.1.0",
+  "description": "Node client for joinstorm.io ",
+  "main": "stormclient.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joinstormio/stormclient.git"
+  },
+  "keywords": [
+    "joinstorm",
+    "joinstorm.io",
+    "storm",
+    "test",
+    "load",
+    "nodejs",
+    "mqtt"
+  ],
+  "author": "joinstorm.io",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joinstormio/stormclient/issues"
+  },
+  "homepage": "https://github.com/joinstormio/stormclient#readme",
+  "dependencies": {
+    "http": "0.0.0",
+    "https": "^1.0.0",
+    "mqtt": "^3.0.0",
+    "yargs": "^15.0.2"
+  }
+}
