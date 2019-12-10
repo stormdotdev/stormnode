@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict';
+const DEBUG = true;
 
 const VERSION = require(__dirname + '/package.json').version;
 const yargs = require('yargs');
@@ -9,7 +10,7 @@ const argv = yargs
   .help()
   .version(VERSION)
   .alias('h', 'help')
-  .default('c', './storm_client.json')
+  .default('c', './stormclient.json')
   .alias('c', 'config')
   .argv;
 
@@ -24,10 +25,13 @@ const MS_PER_NS = 1e6;
 const ownTopic = `joinstorm/clients/${clientOptions.clientId}/status`;
 
 const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://joinstorm.io:8883', buildConnectOptions(clientOptions, ownTopic));
+let helloData = null;
 let clientIp = null;
 
 client.on('connect', async function () {
-  clientIp = await sendHello();
+  //clientIp = await sendHello();
+  helloData = await sendHello();
+  clientIp = helloData.ip;
   client.subscribe('joinstorm/general');
 
   client.publish(ownTopic, JSON.stringify(helloMessage()), {
@@ -36,6 +40,7 @@ client.on('connect', async function () {
 });
 
 client.on('message', function (topic, message) {
+      if (DEBUG) console.log(message.toString());
   let payload;
 
   try {
@@ -68,10 +73,11 @@ async function handleNewFlow(flowConfig, clientIp) {
   }
 
   const result = {
+
     clientIp: clientIp,
     responsesData: responsesData
   };
-
+  //console.log(JSON.stringify(result));
   client.publish(`joinstorm/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
 }
 
@@ -229,7 +235,7 @@ function sendHello() {
       });
 
       resp.on('end', () => {
-        resolve(data);
+        resolve(JSON.parse(data));
       });
     }).on('error', err => {
       console.log(err.message);
