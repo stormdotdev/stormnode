@@ -22,9 +22,9 @@ const https = require('https');
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e6;
 
-const ownTopic = `joinstorm/clients/${clientOptions.clientId}/status`;
+const ownTopic = `stormdev/clients/${clientOptions.clientId}/status`;
 
-const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://joinstorm.io:8883', buildConnectOptions(clientOptions, ownTopic));
+const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://storm.dev:8883', buildConnectOptions(clientOptions, ownTopic));
 let helloData = null;
 let clientIp = null;
 
@@ -32,7 +32,7 @@ client.on('connect', async function () {
   //clientIp = await sendHello();
   helloData = await sendHello();
   clientIp = helloData.ip;
-  client.subscribe('joinstorm/general');
+  client.subscribe('stormdev/general');
 
   client.publish(ownTopic, JSON.stringify(helloMessage()), {
     retain: true
@@ -78,7 +78,7 @@ async function handleNewFlow(flowConfig, clientIp) {
     responsesData: responsesData
   };
   //console.log(JSON.stringify(result));
-  client.publish(`joinstorm/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
+  client.publish(`stormdev/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {
@@ -227,7 +227,7 @@ function helloMessage(clientIp) {
 
 function sendHello() {
   return new Promise(function(resolve, reject) {
-    https.get('https://joinstorm.io/api/hello?version='+VERSION+'&clientid='+clientOptions.clientId, resp => {
+    https.get('https://storm.dev/api/hello?version='+VERSION+'&clientid='+clientOptions.clientId, resp => {
       let data = '';
 
       resp.on('data', chunk => {

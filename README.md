@@ -3,7 +3,8 @@
 # Stormclient
 ![Version](https://img.shields.io/github/package-json/v/joinstormio/stormclient)  ![License](https://img.shields.io/github/license/joinstormio/stormclient)   [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 ![Size](https://img.shields.io/github/size/joinstormio/stormclient/stormclient.js)
-NodeJs client for joinstorm node net
+
+NodeJs client for storm.dev node net
 
 ## Getting Started
 
@@ -11,7 +12,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ## Prerequisites
 
- - You must have an account on joinstorm.io to access our network. Please register [here](https://joinstorm.io/register) to join our community
+ - You must have an account on storm.dev to access our network. Please register [here](https://joinstorm.io/register) to join our community
  - NodeJs & npm
 
 ## Setup
@@ -23,7 +24,7 @@ Check installation with:
 ## Local Install
 
 clone this repo:
-> git clone https://github.com/joinstormio/stormclient.git
+> git clone https://github.com/stormdotdev/stormclient.git
 
 > cd stormclient
 
@@ -32,7 +33,7 @@ clone this repo:
 ## Configuration
 
 ### simple method
-> download the json configuration file from your client page [here](https://joinstorm.io/myclients) and put it in the same folder as stormclient.js
+> download the json configuration file from your client page [here](https://storm.dev/myclients) and put it in the same folder as stormclient.js
 
 ### alternative
 create a stormclient.json file composed like this:
@@ -54,9 +55,9 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **joinstorm.io** - [joinstorm.io](https://joinstorm.io)
+* **storm.dev** - [storm.dev](https://storm.dev)
 
-See also the list of [contributors](https://github.com/joinstormio/stormclient/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/stormdotdev/stormclient/contributors) who participated in this project.
 
 ## License
 
