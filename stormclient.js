@@ -22,19 +22,20 @@ const https = require('https');
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e6;
 
-const ownTopic = `stormdev/clients/${clientOptions.clientId}/status`;
+const ownTopic = `storm.dev/clients/${clientOptions.clientId}/status`;
 
 const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://storm.dev:8883', buildConnectOptions(clientOptions, ownTopic));
 let helloData = null;
 let clientIp = null;
 
 client.on('connect', async function () {
+  if (DEBUG) console.log("connected");
   //clientIp = await sendHello();
   helloData = await sendHello();
   clientIp = helloData.ip;
-  client.subscribe('stormdev/general');
+  client.subscribe('storm.dev/general');
 
-  client.publish(ownTopic, JSON.stringify(helloMessage()), {
+  client.publish(ownTopic, JSON.stringify(helloMessage(clientIp,clientOptions.clientId)), {
     retain: true
   });
 });
@@ -78,7 +79,7 @@ async function handleNewFlow(flowConfig, clientIp) {
     responsesData: responsesData
   };
   //console.log(JSON.stringify(result));
-  client.publish(`stormdev/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
+  client.publish(`storm.dev/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {
@@ -213,15 +214,23 @@ function buildConnectOptions(clientOptions, ownTopic) {
     protocolVersion: 5,
     will: {
       topic: ownTopic,
-      payload: null,
+      payload: JSON.stringify(lwtMessage(clientOptions.clientId)),
       retain: true
     }
   };
 }
 
-function helloMessage(clientIp) {
+function helloMessage(clientIp,clientId) {
   return {
-    command: 'hello'
+    command: 'online',
+    ip: clientIp,
+    clientId: clientId
+  };
+}
+function lwtMessage(clientId) {
+  return {
+    command: 'offline',
+    clientId: clientId
   };
 }
 
