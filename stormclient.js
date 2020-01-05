@@ -30,10 +30,14 @@ let clientIp = null;
 
 client.on('connect', async function () {
   if (DEBUG) console.log("connected");
-  //clientIp = await sendHello();
   helloData = await sendHello();
   clientIp = helloData.ip;
+
+  // general topic
   client.subscribe('storm.dev/general');
+
+  // private topic
+  client.subscribe(`storm.dev/clients/${clientOptions.clientId}/direct`);
 
   client.publish(ownTopic, JSON.stringify(helloMessage(clientIp,clientOptions.clientId)), {
     retain: true
@@ -214,7 +218,7 @@ function buildConnectOptions(clientOptions, ownTopic) {
     protocolVersion: 5,
     will: {
       topic: ownTopic,
-      payload: JSON.stringify(lwtMessage(clientOptions.clientId)),
+      payload: null,
       retain: true
     }
   };
@@ -224,12 +228,6 @@ function helloMessage(clientIp,clientId) {
   return {
     command: 'online',
     ip: clientIp,
-    clientId: clientId
-  };
-}
-function lwtMessage(clientId) {
-  return {
-    command: 'offline',
     clientId: clientId
   };
 }
