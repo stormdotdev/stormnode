@@ -11,6 +11,7 @@ const argv = yargs
   .alias('h', 'help')
   .default('c', './stormclient.json')
   .alias('c', 'config')
+  .count('verbose')
   .alias('v', 'verbose')
   .argv;
 
