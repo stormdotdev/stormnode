@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 'use strict';
-const DEBUG = true;
 
 const VERSION = require(__dirname + '/package.json').version;
 const yargs = require('yargs');
@@ -12,9 +11,27 @@ const argv = yargs
   .alias('h', 'help')
   .default('c', './stormclient.json')
   .alias('c', 'config')
+  .alias('v', 'verbose')
   .argv;
 
+const VERBOSE_LEVEL = argv.verbose;
+const DEBUG = function() { VERBOSE_LEVEL >= 0 && console.log.apply(console, arguments); }
+
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+
+const lockFilePath = function(clientId) {
+  return [os.tmpdir(), `storm-node-${clientId}.lock`].join(path.sep);
+};
+
 const clientOptions = requireClientOptionsOrFail(argv.config);
+
+if (fs.existsSync(lockFilePath(clientOptions.clientId))) {
+  console.log('lock file exists');
+  process.exit(1);
+}
+
 const mqtt = require('mqtt');
 const http = require('http');
 const https = require('https');
@@ -28,8 +45,22 @@ const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://storm.dev
 let helloData = null;
 let clientIp = null;
 
+// sent by broker on multiple connections from same client_id
+client.on('disconnect', function (packet) {
+  console.log('new connection from same client_id, closing this one');
+  const clientLockFilePath = lockFilePath(clientOptions.clientId);
+  fs.writeFile(clientLockFilePath, process.pid, null, function (err) {
+    if (err) {
+      throw err;
+    }
+
+    console.log(`lock file created at ${clientLockFilePath}. Node won't restart until lock file exists.`);
+    client.end();
+  });
+});
+
 client.on('connect', async function () {
-  if (DEBUG) console.log("connected");
+  DEBUG('connected');
   helloData = await sendHello();
   clientIp = helloData.ip;
 
@@ -45,7 +76,7 @@ client.on('connect', async function () {
 });
 
 client.on('message', function (topic, message) {
-      if (DEBUG) console.log(message.toString());
+  DEBUG(message.toString());
   let payload;
 
   try {
@@ -234,6 +265,8 @@ function helloMessage(clientIp,clientId) {
 
 function sendHello() {
   return new Promise(function(resolve, reject) {
+    return resolve({ip: '192.168.1.1'});
+
     https.get('https://storm.dev/api/hello?version='+VERSION+'&clientid='+clientOptions.clientId, resp => {
       let data = '';
 
@@ -252,8 +285,8 @@ function sendHello() {
 }
 
 function requireClientOptionsOrFail(config) {
-  const pathResolve = require('path').resolve;
-
+  const pathResolve = path.resolve;
+  
   try {
     return require(pathResolve(config));
   } catch (e) {
