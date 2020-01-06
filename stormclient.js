@@ -42,7 +42,7 @@ const MS_PER_NS = 1e6;
 
 const ownTopic = `storm.dev/clients/${clientOptions.clientId}/status`;
 
-const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://storm.dev:8883', buildConnectOptions(clientOptions, ownTopic));
+const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(clientOptions, ownTopic));
 let helloData = null;
 let clientIp = null;
 
@@ -243,7 +243,6 @@ function timingsDone(timings) {
 
 function buildConnectOptions(clientOptions, ownTopic) {
   return {
-    rejectUnauthorized: false, // until certificate fixed on server
     username: clientOptions.username,
     password: clientOptions.password,
     clientId: process.env.STORM_CLIENTID || clientOptions.clientId,
