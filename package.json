@@ -1,6 +1,6 @@
 {
   "name": "stormclient",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Node client for storm.dev ",
   "main": "stormclient.js",
   "bin": {
@@ -21,7 +21,10 @@
     "test",
     "load",
     "nodejs",
-    "mqtt"
+    "mqtt",
+    "nodenet",
+    "decentralized",
+    "distrubuited"
   ],
   "author": "storm.dev",
   "license": "MIT",

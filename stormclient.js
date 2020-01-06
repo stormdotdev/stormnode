@@ -90,6 +90,11 @@ client.on('message', function (topic, message) {
             return;
       }
 
+      if (!authorized(payload)){
+            DEBUG('Command discarded');
+            return;
+      }
+
       const command = payload.command;
 
       switch (command) {
@@ -331,4 +336,21 @@ function unsubscribetopic(payload){
                   console.log('Error could not unsubscribe '+payload.newtopic+': '+ err.toString());
             }
       });
+}
+
+function authorized(payload) {
+      const authtype = payload.authtype;
+      const authdata = payload.authdata;
+      let auth = false;
+
+      switch (authtype) {
+            case 'randomselect':
+                  const randresult = Math.floor(Math.random() * (1000) + 1);
+                  if (randresult<= authdata) auth = true;
+                  break
+            default:
+                  break;
+      }
+
+      return auth;
 }
