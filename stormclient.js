@@ -99,6 +99,12 @@ client.on('message', function (topic, message) {
             case 'checkstatus':
                   handleCheckStatus(payload, clientIp);
                   break;
+            case 'subscribetopic':
+                  subscribetopic(payload);
+                  break;
+            case 'unsubscribetopic':
+                  unsubscribetopic(payload);
+                  break;
             default:
                   break;
       }
@@ -309,4 +315,20 @@ function requireClientOptionsOrFail(config) {
     yargs.showHelp();
     process.exit(1);
   }
+}
+
+function subscribetopic(payload){
+      client.subscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+            if (err){
+                  console.log('Error could not subscribe in '+payload.newtopic+': '+ err.toString());
+            }
+      });
+}
+
+function unsubscribetopic(payload){
+      client.unsubscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+            if (err){
+                  console.log('Error could not unsubscribe '+payload.newtopic+': '+ err.toString());
+            }
+      });
 }
