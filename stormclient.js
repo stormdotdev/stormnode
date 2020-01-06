@@ -80,25 +80,28 @@ client.on('message', function (topic, message) {
   DEBUG(message.toString());
   let payload;
 
-  try {
-    payload = JSON.parse(message.toString());
-  } catch (err) {
-    payload = null;
-  }
+      try {
+            payload = JSON.parse(message.toString());
+      } catch (err) {
+            payload = null;
+      }
 
-  if (!payload) {
-    return;
-  }
+      if (!payload) {
+            return;
+      }
 
-  const command = payload.command;
+      const command = payload.command;
 
-  switch (command) {
-    case 'flow':
-        handleNewFlow(payload, clientIp);
-      break;
-    default:
-      break;
-  }
+      switch (command) {
+            case 'flow':
+                  handleNewFlow(payload, clientIp);
+                  break;
+            case 'checkstatus':
+                  handleCheckStatus(payload, clientIp);
+                  break;
+            default:
+                  break;
+      }
 });
 
 async function handleNewFlow(flowConfig, clientIp) {
@@ -116,6 +119,19 @@ async function handleNewFlow(flowConfig, clientIp) {
   };
   //console.log(JSON.stringify(result));
   client.publish(`storm.dev/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
+}
+
+async function handleCheckStatus(csData, clientIp) {
+
+  const responsesData = await doRequest(csConfig);
+
+  const result = {
+
+    clientIp: clientIp,
+    responsesData: responsesData
+  };
+
+  client.publish(`storm.dev/checkstatus/${csData.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {
@@ -265,7 +281,7 @@ function helloMessage(clientIp,clientId) {
 
 function sendHello() {
   return new Promise(function(resolve, reject) {
-    return resolve({ip: '192.168.1.1'});
+    //return resolve({ip: '192.168.1.1'});
 
     https.get('https://storm.dev/api/hello?version='+VERSION+'&clientid='+clientOptions.clientId, resp => {
       let data = '';
@@ -286,7 +302,7 @@ function sendHello() {
 
 function requireClientOptionsOrFail(config) {
   const pathResolve = path.resolve;
-  
+
   try {
     return require(pathResolve(config));
   } catch (e) {
