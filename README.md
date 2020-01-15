@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/github/package-json/v/joinstormio/stormclient)  ![License](https://img.shields.io/github/license/joinstormio/stormclient)   [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 ![Size](https://img.shields.io/github/size/joinstormio/stormclient/stormclient.js)
 
-NodeJs client for storm.dev node net
+NodeJs node for storm.dev node net
 
 ## Getting Started
 
@@ -16,32 +16,32 @@ These instructions will get you a copy of the project up and running on your loc
  - NodeJs & npm
 
 ## Setup
-> npm install -g stormclient
+> npm install -g stormnode
 
 Check installation with:
-> stormclient --version
+> stormnode --version
 
 ## Local Install
 
 clone this repo:
-> git clone https://github.com/stormdotdev/stormclient.git
+> git clone https://github.com/stormdotdev/stormnode.git
 
-> cd stormclient
+> cd stormnode
 
 > npm install
 
 ## Configuration
 
 ### simple method
-> download the json configuration file from your client page [here](https://storm.dev/myclients) and put it in the same folder as stormclient.js
+> download the json configuration file from your node page [here](https://storm.dev/mynodes) and put it in the same folder as stormnode.js
 
 ### alternative
-create a stormclient.json file composed like this:
+create a stormnode.json file composed like this:
 ```json
 {
-    "username": "client1",
+    "username": "user1",
     "password": "password1",
-    "clientId": "user-client1-client1"
+    "nodeId": "user-node1-node1"
 }
 ```
 

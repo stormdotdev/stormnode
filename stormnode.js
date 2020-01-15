@@ -5,11 +5,11 @@ const VERSION = require(__dirname + '/package.json').version;
 const yargs = require('yargs');
 
 const argv = yargs
-  .usage('$0 [ -c path-to-storm-client.json ]')
+  .usage('$0 [ -c path-to-stormnode.json ]')
   .help()
   .version(VERSION)
   .alias('h', 'help')
-  .default('c', './stormclient.json')
+  .default('c', './stormnode.json')
   .alias('c', 'config')
   .count('verbose')
   .alias('v', 'verbose')
@@ -22,13 +22,13 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
-const lockFilePath = function(clientId) {
-  return [os.tmpdir(), `storm-node-${clientId}.lock`].join(path.sep);
+const lockFilePath = function(nodeId) {
+  return [os.tmpdir(), `storm-node-${nodeId}.lock`].join(path.sep);
 };
 
-const clientOptions = requireClientOptionsOrFail(argv.config);
+const nodeOptions = requirenodeOptionsOrFail(argv.config);
 
-if (fs.existsSync(lockFilePath(clientOptions.clientId))) {
+if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
   process.exit(1);
 }
@@ -40,43 +40,43 @@ const https = require('https');
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e6;
 
-const ownTopic = `storm.dev/clients/${clientOptions.clientId}/status`;
+const ownTopic = `storm.dev/nodes/${nodeOptions.nodeId}/status`;
 
-const client  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(clientOptions, ownTopic));
+const node  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(nodeOptions, ownTopic));
 let helloData = null;
-let clientIp = null;
+let nodeIp = null;
 
-// sent by broker on multiple connections from same client_id
-client.on('disconnect', function (packet) {
-  console.log('new connection from same client_id, closing this one');
-  const clientLockFilePath = lockFilePath(clientOptions.clientId);
-  fs.writeFile(clientLockFilePath, process.pid, null, function (err) {
+// sent by broker on multiple connections from same node_id
+node.on('disconnect', function (packet) {
+  console.log('new connection from same node_id, closing this one');
+  const nodeLockFilePath = lockFilePath(nodeOptions.nodeId);
+  fs.writeFile(nodeLockFilePath, process.pid, null, function (err) {
     if (err) {
       throw err;
     }
 
-    console.log(`lock file created at ${clientLockFilePath}. Node won't restart until lock file exists.`);
-    client.end();
+    console.log(`lock file created at ${nodeLockFilePath}. Node won't restart until lock file exists.`);
+    node.end();
   });
 });
 
-client.on('connect', async function () {
+node.on('connect', async function () {
   DEBUG('connected');
   helloData = await sendHello();
-  clientIp = helloData.ip;
+  nodeIp = helloData.ip;
 
   // general topic
-  client.subscribe('storm.dev/general');
+  node.subscribe('storm.dev/general');
 
   // private topic
-  client.subscribe(`storm.dev/clients/${clientOptions.clientId}/direct`);
+  node.subscribe(`storm.dev/nodes/${nodeOptions.nodeId}/direct`);
 
-  client.publish(ownTopic, JSON.stringify(helloMessage(clientIp,clientOptions.clientId)), {
+  node.publish(ownTopic, JSON.stringify(helloMessage(nodeIp,nodeOptions.nodeId)), {
     retain: true
   });
 });
 
-client.on('message', function (topic, message) {
+node.on('message', function (topic, message) {
   DEBUG(message.toString());
   let payload;
 
@@ -99,10 +99,10 @@ client.on('message', function (topic, message) {
 
       switch (command) {
             case 'flow':
-                  handleNewFlow(payload, clientIp);
+                  handleNewFlow(payload, nodeIp);
                   break;
             case 'checkstatus':
-                  handleCheckStatus(payload, clientIp);
+                  handleCheckStatus(payload, nodeIp);
                   break;
             case 'subscribetopic':
                   subscribetopic(payload);
@@ -115,7 +115,7 @@ client.on('message', function (topic, message) {
       }
 });
 
-async function handleNewFlow(flowConfig, clientIp) {
+async function handleNewFlow(flowConfig, nodeIp) {
   flowConfig.requests = flowConfig.requests.map(configFlowRequest);
   const responsesData = [];
 
@@ -125,24 +125,24 @@ async function handleNewFlow(flowConfig, clientIp) {
 
   const result = {
 
-    clientIp: clientIp,
+    nodeIp: nodeIp,
     responsesData: responsesData
   };
   //console.log(JSON.stringify(result));
-  client.publish(`storm.dev/flows/${flowConfig.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
+  node.publish(`storm.dev/flows/${flowConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
-async function handleCheckStatus(csData, clientIp) {
+async function handleCheckStatus(csData, nodeIp) {
 
   const responsesData = await doRequest(csConfig);
 
   const result = {
 
-    clientIp: clientIp,
+    nodeIp: nodeIp,
     responsesData: responsesData
   };
 
-  client.publish(`storm.dev/checkstatus/${csData.id}/${clientOptions.clientId}/results`, JSON.stringify(result));
+  node.publish(`storm.dev/checkstatus/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {
@@ -268,11 +268,11 @@ function timingsDone(timings) {
   };
 }
 
-function buildConnectOptions(clientOptions, ownTopic) {
+function buildConnectOptions(nodeOptions, ownTopic) {
   return {
-    username: clientOptions.username,
-    password: clientOptions.password,
-    clientId: process.env.STORM_CLIENTID || clientOptions.clientId,
+    username: nodeOptions.username,
+    password: nodeOptions.password,
+    clientId: process.env.STORM_NODEID || nodeOptions.nodeId,
     protocolVersion: 5,
     will: {
       topic: ownTopic,
@@ -282,11 +282,11 @@ function buildConnectOptions(clientOptions, ownTopic) {
   };
 }
 
-function helloMessage(clientIp,clientId) {
+function helloMessage(nodeIp,nodeId) {
   return {
     command: 'online',
-    ip: clientIp,
-    clientId: clientId
+    ip: nodeIp,
+    nodeId: nodeId
   };
 }
 
@@ -294,7 +294,7 @@ function sendHello() {
   return new Promise(function(resolve, reject) {
     //return resolve({ip: '192.168.1.1'});
 
-    https.get('https://storm.dev/api/hello?version='+VERSION+'&clientid='+clientOptions.clientId, resp => {
+    https.get('https://storm.dev/api/hello?version='+VERSION+'&nodeid='+nodeOptions.nodeId, resp => {
       let data = '';
 
       resp.on('data', chunk => {
@@ -311,7 +311,7 @@ function sendHello() {
   });
 }
 
-function requireClientOptionsOrFail(config) {
+function requirenodeOptionsOrFail(config) {
   const pathResolve = path.resolve;
 
   try {
@@ -323,7 +323,7 @@ function requireClientOptionsOrFail(config) {
 }
 
 function subscribetopic(payload){
-      client.subscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+      node.subscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
             if (err){
                   console.log('Error could not subscribe in '+payload.newtopic+': '+ err.toString());
             }
@@ -331,7 +331,7 @@ function subscribetopic(payload){
 }
 
 function unsubscribetopic(payload){
-      client.unsubscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+      node.unsubscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
             if (err){
                   console.log('Error could not unsubscribe '+payload.newtopic+': '+ err.toString());
             }

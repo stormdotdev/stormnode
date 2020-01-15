@@ -1,17 +1,17 @@
 {
   "name": "stormclient",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Node client for storm.dev ",
-  "main": "stormclient.js",
+  "main": "stormnode.js",
   "bin": {
-    "stormclient": "./stormclient.js"
+    "stormnode": "./stormnode.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stormdotdev/stormclient.git"
+    "url": "git+https://github.com/stormdotdev/stormcnet.git"
   },
   "keywords": [
     "stormdev",
@@ -29,9 +29,9 @@
   "author": "storm.dev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/stormdotdev/stormclient/issues"
+    "url": "https://github.com/stormdotdev/stormnode/issues"
   },
-  "homepage": "https://github.com/stormdotdev/stormclient#readme",
+  "homepage": "https://github.com/stormdotdev/stormnode#readme",
   "dependencies": {
     "mqtt": "^3.0.0",
     "yargs": "^15.0.2"
