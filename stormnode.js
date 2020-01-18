@@ -21,6 +21,7 @@ const DEBUG = function() { VERBOSE_LEVEL >= 0 && console.log.apply(console, argu
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const nodeRSA = require('node-rsa');
 
 const lockFilePath = function(nodeId) {
   return [os.tmpdir(), `storm-node-${nodeId}.lock`].join(path.sep);
@@ -366,8 +367,7 @@ function authorized(authtype, authdata) {
 
 function verifysign(signature) {
 
-      const NodeRSA = require('node-rsa');
-      const key = new NodeRSA(stormdev_public_key);
+      const key = new nodeRSA(stormdev_public_key);
       const decrypted_sign = key.decryptPublic(signature, 'utf8');
       console.log('decrypted: ', decrypted_sign);
       var decrypted_sign_split = decrypted_sign.split("|");
@@ -379,7 +379,7 @@ function verifysign(signature) {
 }
 function setTime(time){
       stormdevTime = time;
-      deltaTime = Data.now() - stormdevTime;
+      deltaTime = Date.now() - stormdevTime;
 }
 
 const stormdev_public_key =
