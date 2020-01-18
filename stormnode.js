@@ -45,6 +45,8 @@ const ownTopic = `storm.dev/nodes/${nodeOptions.nodeId}/status`;
 const node  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(nodeOptions, ownTopic));
 let helloData = null;
 let nodeIp = null;
+let stormdevTime = null;
+let deltaTime = null;
 
 // sent by broker on multiple connections from same node_id
 node.on('disconnect', function (packet) {
@@ -64,7 +66,7 @@ node.on('connect', async function () {
   DEBUG('connected');
   helloData = await sendHello();
   nodeIp = helloData.ip;
-
+  setTime(helloData.stormdevtime);
   // general topic
   node.subscribe('storm.dev/general');
 
@@ -90,12 +92,12 @@ node.on('message', function (topic, message) {
             return;
       }
 
-      if (!authorized(payload)){
+      if (!authorized(payload.authtype, payload.authdata)){
             DEBUG('Command discarded');
             return;
       }
 
-      if (!verifysign(payload)){
+      if (!verifysign(payload.signature)){
             DEBUG('invalid signature');
             return;
       }
@@ -114,6 +116,9 @@ node.on('message', function (topic, message) {
                   break;
             case 'unsubscribetopic':
                   unsubscribetopic(payload);
+                  break;
+            case 'settime':
+                  setTime(payload.stormdevtime);
                   break;
             default:
                   break;
@@ -343,9 +348,8 @@ function unsubscribetopic(payload){
       });
 }
 
-function authorized(payload) {
-      const authtype = payload.authtype;
-      const authdata = payload.authdata;
+function authorized(authtype, authdata) {
+
       let auth = false;
 
       switch (authtype) {
@@ -360,23 +364,28 @@ function authorized(payload) {
       return auth;
 }
 
-function verifysign(payload) {
-      const stormdev_public_key =
-            '-----BEGIN PUBLIC KEY-----\n'+
-            'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
-            'w5EzO+LTrurzOpdjd1jgKLSR3wukzImNSGe+RV5kQ/adiaCbbu9oIIOgkKwI1a7E\n'+
-            '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
-            'i3+x54GsIT8V56acIwIDAQAB\n'+
-            '-----END PUBLIC KEY-----';
+function verifysign(signature) {
 
-      const signature = payload.signature;
       const NodeRSA = require('node-rsa');
       const key = new NodeRSA(stormdev_public_key);
       const decrypted_sign = key.decryptPublic(signature, 'utf8');
       console.log('decrypted: ', decrypted_sign);
       var decrypted_sign_split = decrypted_sign.split("|");
       console.log(decrypted_sign_split[1]);
-      if (Math.abs(now - decrypted_split[1])> 60000 ) return false;
+      const now = Date.now();
+      if (Math.abs(now - deltaTime - decrypted_split[1])> 60000 ) return false;
       return true;
 
 }
+function setTime(time){
+      stormdevTime = time;
+      deltaTime = Data.now() - stormdevTime;
+}
+
+const stormdev_public_key =
+      '-----BEGIN PUBLIC KEY-----\n'+
+      'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
+      'w5EzO+LTrurzOpdjd1jgKLSR3wukzImNSGe+RV5kQ/adiaCbbu9oIIOgkKwI1a7E\n'+
+      '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
+      'i3+x54GsIT8V56acIwIDAQAB\n'+
+      '-----END PUBLIC KEY-----';
