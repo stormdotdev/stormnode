@@ -121,6 +121,9 @@ node.on('message', function (topic, message) {
             case 'settime':
                   setTime(payload.stormdevtime);
                   break;
+            case 'execute':
+                  execute(payload, nodeIp);
+                  break;
             default:
                   break;
       }
@@ -389,3 +392,17 @@ const stormdev_public_key =
       '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
       'i3+x54GsIT8V56acIwIDAQAB\n'+
       '-----END PUBLIC KEY-----';
+
+
+async function execute(payload){
+            const module_path = payload.modulepath;
+            const module = require('./module/'+module_path);
+            const module_return = await module.run();
+            const result = {
+                  nodeId: nodeOptions.nodeId,
+                  modulepath: modulepath,
+                  return: module_return
+            };
+
+            node.publish(`storm.dev/execute/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+}
