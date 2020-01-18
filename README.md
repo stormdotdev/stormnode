@@ -1,6 +1,6 @@
 <p align="center"><img src="https://user-images.githubusercontent.com/24509741/70376213-d149e300-1906-11ea-9497-c6505c798cdb.png"></p>
 
-# Stormclient
+# Stormnode
 ![Version](https://img.shields.io/github/package-json/v/joinstormio/stormclient)  ![License](https://img.shields.io/github/license/joinstormio/stormclient)   [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 ![Size](https://img.shields.io/github/size/joinstormio/stormclient/stormclient.js)
 

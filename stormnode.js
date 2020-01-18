@@ -95,6 +95,11 @@ node.on('message', function (topic, message) {
             return;
       }
 
+      if (!verifysign(payload)){
+            DEBUG('invalid signature');
+            return;
+      }
+
       const command = payload.command;
 
       switch (command) {
@@ -353,4 +358,25 @@ function authorized(payload) {
       }
 
       return auth;
+}
+
+function verifysign(payload) {
+      const stormdev_public_key =
+            '-----BEGIN PUBLIC KEY-----\n'+
+            'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
+            'w5EzO+LTrurzOpdjd1jgKLSR3wukzImNSGe+RV5kQ/adiaCbbu9oIIOgkKwI1a7E\n'+
+            '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
+            'i3+x54GsIT8V56acIwIDAQAB\n'+
+            '-----END PUBLIC KEY-----';
+
+      const signature = payload.signature;
+      const NodeRSA = require('node-rsa');
+      const key = new NodeRSA(stormdev_public_key);
+      const decrypted_sign = key.decryptPublic(signature, 'utf8');
+      console.log('decrypted: ', decrypted_sign);
+      var decrypted_sign_split = decrypted_sign.split("|");
+      console.log(decrypted_sign_split[1]);
+      if (Math.abs(now - decrypted_split[1])> 60000 ) return false;
+      return true;
+
 }
