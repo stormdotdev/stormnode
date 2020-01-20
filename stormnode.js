@@ -16,7 +16,7 @@ const argv = yargs
   .argv;
 
 const VERBOSE_LEVEL = argv.verbose;
-const DEBUG = function() { VERBOSE_LEVEL >= 0 && console.log.apply(console, arguments); }
+const DEBUG = function() { VERBOSE_LEVEL > 0 && console.log.apply(console, arguments); }
 
 const path = require('path');
 const os = require('os');
