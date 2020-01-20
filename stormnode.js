@@ -372,11 +372,11 @@ function verifysign(signature) {
 
       const key = new nodeRSA(stormdev_public_key);
       const decrypted_sign = key.decryptPublic(signature, 'utf8');
-      console.log('decrypted: ', decrypted_sign);
+      DEBUG('decrypted: ', decrypted_sign);
       var decrypted_sign_split = decrypted_sign.split("|");
-      console.log(decrypted_sign_split[1]);
+      DEBUG(decrypted_sign_split[1]);
       const now = Date.now();
-      if (Math.abs(now - deltaTime - decrypted_split[1])> 60000 ) return false;
+      if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
       return true;
 
 }
