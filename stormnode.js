@@ -122,7 +122,7 @@ node.on('message', function (topic, message) {
                   setTime(payload.stormdevtime);
                   break;
             case 'execute':
-                  execute(payload, nodeIp);
+                  execute(payload);
                   break;
             default:
                   break;
