@@ -106,11 +106,11 @@ node.on('message', function (topic, message) {
       const command = payload.command;
 
       switch (command) {
-            case 'flow':
-                  handleNewFlow(payload, nodeIp);
+            case 'loadtest':
+                  handleNewLoadtest(payload, nodeIp);
                   break;
-            case 'checkstatus':
-                  handleCheckStatus(payload, nodeIp);
+            case 'endpointhealth':
+                  handleEndpointhealth(payload, nodeIp);
                   break;
             case 'subscribetopic':
                   subscribetopic(payload);
@@ -129,11 +129,11 @@ node.on('message', function (topic, message) {
       }
 });
 
-async function handleNewFlow(flowConfig, nodeIp) {
-  flowConfig.requests = flowConfig.requests.map(configFlowRequest);
+async function handleNewLoadtest(loadtestConfig, nodeIp) {
+  loadtestConfig.requests = loadtestConfig.requests.map(configLoadtestRequest);
   const responsesData = [];
 
-  for (const config of flowConfig.requests) {
+  for (const config of loadtestConfig.requests) {
     responsesData.push(await doRequest(config));
   }
 
@@ -142,10 +142,10 @@ async function handleNewFlow(flowConfig, nodeIp) {
     responsesData: responsesData
   };
 
-  node.publish(`storm.dev/flows/${flowConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+  node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
-async function handleCheckStatus(csData, nodeIp) {
+async function handleEndpointhealth(csData, nodeIp) {
 
   const responsesData = await doRequest(csConfig);
 
@@ -155,7 +155,7 @@ async function handleCheckStatus(csData, nodeIp) {
     responsesData: responsesData
   };
 
-  node.publish(`storm.dev/checkstatus/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+  node.publish(`storm.dev/endpointhealth/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {
@@ -239,7 +239,7 @@ function doRequest(config) {
   });
 }
 
-function configFlowRequest(requestConfig) {
+function configLoadtestRequest(requestConfig) {
   return requestConfig;
 }
 
