@@ -10,7 +10,6 @@ module.exports = {
                         child = spawn('git', ['pull']);
                         child.stdout.on('data', function (data) {
                               var str = data.toString()
-                              console.log(str);
                               string_return += str;
                         });
 
@@ -25,7 +24,6 @@ module.exports = {
                               var str = data.toString();
                               string_return += str;
                               resolve(string_return);
-                              console.log(str);
                         });
 
                   })
