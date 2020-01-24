@@ -361,6 +361,9 @@ function authorized(authtype, authdata) {
                   const randresult = Math.floor(Math.random() * (1000) + 1);
                   if (randresult<= authdata) auth = true;
                   break
+            case 'all':
+                  auth = true;
+                  break
             default:
                   break;
       }
@@ -374,7 +377,6 @@ function verifysign(signature) {
       const decrypted_sign = key.decryptPublic(signature, 'utf8');
       DEBUG('decrypted: ', decrypted_sign);
       var decrypted_sign_split = decrypted_sign.split("|");
-      DEBUG(decrypted_sign_split[1]);
       const now = Date.now();
       if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
       return true;
@@ -400,9 +402,9 @@ async function execute(payload){
             const module_return = await module.run();
             const result = {
                   nodeId: nodeOptions.nodeId,
-                  modulepath: modulepath,
+                  modulepath: module_path,
                   return: module_return
             };
-
+            console.log(JSON.stringify(result));
             node.publish(`storm.dev/execute/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
