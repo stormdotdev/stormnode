@@ -138,11 +138,10 @@ async function handleNewFlow(flowConfig, nodeIp) {
   }
 
   const result = {
-
     nodeIp: nodeIp,
     responsesData: responsesData
   };
-  //console.log(JSON.stringify(result));
+
   node.publish(`storm.dev/flows/${flowConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
@@ -205,7 +204,8 @@ function doRequest(config) {
     });
 
     req.once('error', function (err) {
-      reject(err);
+      responseData.error_message = err.message;
+      resolve(responseData);
     });
 
     req.once('response', function (resp) {
