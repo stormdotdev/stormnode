@@ -1,8 +1,8 @@
 <p align="center"><img src="https://user-images.githubusercontent.com/24509741/70376213-d149e300-1906-11ea-9497-c6505c798cdb.png"></p>
 
 # Stormnode
-![Version](https://img.shields.io/github/package-json/v/joinstormio/stormclient)  ![License](https://img.shields.io/github/license/joinstormio/stormclient)   [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
-![Size](https://img.shields.io/github/size/joinstormio/stormclient/stormclient.js)
+![Version](https://img.shields.io/github/package-json/v/stormdotdev/stormnode)  ![License](https://img.shields.io/github/license/stormdotdev/stormnode)   [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
+![Size](https://img.shields.io/github/size/stormdotdev/stormnode/stormnode.js)
 
 NodeJs node for storm.dev node net
 
@@ -12,16 +12,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 ## Prerequisites
 
- - You must have an account on storm.dev to access our network. Please register [here](https://joinstorm.io/register) to join our community
+ - You must have an account on storm.dev to access our network. Please register [here](https://storm.dev/register) to join our community
  - NodeJs & npm
 
 ## Setup
-> npm install -g stormnode
-
-Check installation with:
-> stormnode --version
-
-## Local Install
 
 clone this repo:
 > git clone https://github.com/stormdotdev/stormnode.git
@@ -51,13 +45,13 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/joinstormio/stormclient/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/stormdotdev/stormnode/tags).
 
 ## Authors
 
 * **storm.dev** - [storm.dev](https://storm.dev)
 
-See also the list of [contributors](https://github.com/stormdotdev/stormclient/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/stormdotdev/stormnode/contributors) who participated in this project.
 
 ## License
 
