@@ -398,6 +398,7 @@ const stormdev_public_key =
 
 async function execute(payload){
             const module_path = payload.modulepath;
+            const channel = payload.channel;
             const module = require('./module/'+module_path);
             const module_return = await module.run();
             const result = {
@@ -406,5 +407,5 @@ async function execute(payload){
                   return: module_return
             };
             console.log(JSON.stringify(result));
-            node.publish(`storm.dev/execute/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+            node.publish(`storm.dev/execute/${channel}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
