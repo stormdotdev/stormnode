@@ -130,7 +130,7 @@ node.on('message', function (topic, message) {
 });
 
 async function handleNewLoadtest(loadtestConfig, nodeIp) {
-  loadtestConfig.requests = loadtestConfig.requests.map(configLoadtestRequest);
+  loadtestConfig.requests = loadtestConfig.requests.map(configRequest);
   const responsesData = [];
 
   for (const config of loadtestConfig.requests) {
@@ -146,11 +146,9 @@ async function handleNewLoadtest(loadtestConfig, nodeIp) {
 }
 
 async function handleEndpointhealth(csData, nodeIp) {
-
-  const responsesData = await doRequest(csConfig);
+  const responsesData = await doRequest(configRequest(csData.request));
 
   const result = {
-
     nodeIp: nodeIp,
     responsesData: responsesData
   };
@@ -239,7 +237,7 @@ function doRequest(config) {
   });
 }
 
-function configLoadtestRequest(requestConfig) {
+function configRequest(requestConfig) {
   return requestConfig;
 }
 
