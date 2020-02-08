@@ -112,6 +112,9 @@ node.on('message', function (topic, message) {
             case 'endpointhealth':
                   handleEndpointhealth(payload, nodeIp);
                   break;
+            case 'hostmonitoring':
+                  handleHostMonitoring(payload, nodeIp);
+                  break;
             case 'subscribetopic':
                   subscribetopic(payload);
                   break;
@@ -154,6 +157,16 @@ async function handleEndpointhealth(csData, nodeIp) {
   };
 
   node.publish(`storm.dev/endpointhealth/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+}
+
+async function handleHostMonitoring(csData, nodeIp) {
+      const hostmonitoring = require('./storm_modules/system/hostmonitoring');
+      const hostmonitoring_return = await hostmonitoring.run();
+      const result = {
+            nodeId: nodeOptions.nodeId,
+            responsesData: hostmonitoring_return
+      };
+      node.publish(`storm.dev/hostmonitoring/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
 function doRequest(config) {

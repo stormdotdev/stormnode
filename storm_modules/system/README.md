@@ -1,11 +1,11 @@
 # Storm system module
-### hostmonitoring_base
+## hostmonitoring
 Return basic information from host
 * memory (total, used)
 * cpu load (total cpus, cpu1, ...)
 * disk (disk1, disk2, ...)
 
-The hostmonitoring_base module totally uses the systeminformation library of [Sebastian Hildebrandt](https://github.com/sebhildebrandt)
+The hostmonitoring module totally uses the systeminformation library of [Sebastian Hildebrandt](https://github.com/sebhildebrandt)
 [https://github.com/sebhildebrandt/systeminformation](https://github.com/sebhildebrandt/systeminformation) - systeminformation github page
 [https://systeminformation.io/](https://systeminformation.io/) - systeminformation web page
 Thanks!
@@ -56,7 +56,7 @@ return:
 ```
 
 
-### hostinfo
+## hostinfo
 Not require any external library, uses only os of nodejs
 
 return:
