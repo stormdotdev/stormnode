@@ -32,6 +32,7 @@ module.exports = {
                               }
                               resolve(result);
 
+                              //https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string/14919494#14919494
                               function humanFileSize(bytes, si) {
                                   var thresh = si ? 1000 : 1024;
                                   if(Math.abs(bytes) < thresh) {
