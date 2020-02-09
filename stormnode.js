@@ -27,7 +27,7 @@ const lockFilePath = function(nodeId) {
   return [os.tmpdir(), `storm-node-${nodeId}.lock`].join(path.sep);
 };
 
-const nodeOptions = requirenodeOptionsOrFail(argv.config);
+const nodeOptions = requireNodeOptionsOrFail(argv.config);
 
 if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
@@ -124,6 +124,9 @@ node.on('message', function (topic, message) {
             case 'execute':
                   execute(payload);
                   break;
+            case 'hostmonitoring':
+                handleHostMonitoring(payload, nodeIp);
+                break;
             default:
                   break;
       }
@@ -146,6 +149,7 @@ async function handleNewLoadtest(loadtestConfig, nodeIp) {
 }
 
 async function handleEndpointhealth(csData, nodeIp) {
+  DEBUG('handle endpoint');
   const responsesData = await doRequest(configRequest(csData.request));
 
   const result = {
@@ -153,7 +157,22 @@ async function handleEndpointhealth(csData, nodeIp) {
     responsesData: responsesData
   };
 
+  DEBUG(result);
   node.publish(`storm.dev/endpointhealth/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+}
+
+async function handleHostMonitoring(payload, nodeIp) {
+  DEBUG('handle hostmonitoring');
+  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring_base');
+  const taskData = await hostmonitoring.run()
+
+  const taskResult = {
+    nodeIp: nodeIp,
+    taskData: taskData
+  };
+
+  DEBUG(taskResult);
+  node.publish(`storm.dev/hostmonitoring/${payload.id}/${nodeOptions.nodeId}/results`, JSON.stringify(taskResult));
 }
 
 function doRequest(config) {
@@ -323,7 +342,7 @@ function sendHello() {
   });
 }
 
-function requirenodeOptionsOrFail(config) {
+function requireNodeOptionsOrFail(config) {
   const pathResolve = path.resolve;
 
   try {
@@ -369,22 +388,6 @@ function authorized(authtype, authdata) {
       return auth;
 }
 
-function verifysign(signature) {
-
-      const key = new nodeRSA(stormdev_public_key);
-      const decrypted_sign = key.decryptPublic(signature, 'utf8');
-      DEBUG('decrypted: ', decrypted_sign);
-      var decrypted_sign_split = decrypted_sign.split("|");
-      const now = Date.now();
-      if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
-      return true;
-
-}
-function setTime(time){
-      stormdevTime = time;
-      deltaTime = Date.now() - stormdevTime;
-}
-
 const stormdev_public_key =
       '-----BEGIN PUBLIC KEY-----\n'+
       'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
@@ -392,7 +395,21 @@ const stormdev_public_key =
       '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
       'i3+x54GsIT8V56acIwIDAQAB\n'+
       '-----END PUBLIC KEY-----';
+const RSAKey = new nodeRSA(stormdev_public_key);
 
+function verifysign(signature) {
+      const decrypted_sign = RSAKey.decryptPublic(signature, 'utf8');
+      DEBUG('decrypted: ', decrypted_sign);
+      var decrypted_sign_split = decrypted_sign.split("|");
+      const now = Date.now();
+      if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
+      return true;
+}
+
+function setTime(time){
+      stormdevTime = time;
+      deltaTime = Date.now() - stormdevTime;
+}
 
 async function execute(payload){
             const module_path = payload.modulepath;
