@@ -127,9 +127,6 @@ node.on('message', function (topic, message) {
             case 'execute':
                   execute(payload);
                   break;
-            case 'hostmonitoring':
-                handleHostMonitoring(payload, nodeIp);
-                break;
             default:
                   break;
       }
@@ -166,7 +163,7 @@ async function handleEndpointhealth(csData, nodeIp) {
 
 async function handleHostMonitoring(payload, nodeIp) {
   DEBUG('handle hostmonitoring');
-  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring_base');
+  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring');
   const taskData = await hostmonitoring.run()
 
   const taskResult = {
