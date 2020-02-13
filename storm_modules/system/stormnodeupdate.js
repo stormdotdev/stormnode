@@ -14,16 +14,16 @@ module.exports = {
                         });
 
                         child2 = spawn('npm', ['install']).on('close', function() {
-                                    setTimeout(function(){
+					resolve(string_return);
+					setTimeout(function(){
                                                 return process.exit('reboot');
-                                          },3000);
+                                          },5000);
 
                             });
 
                         child2.stdout.on('data', function (data) {
                               var str = data.toString();
                               string_return += str;
-                              resolve(string_return);
                         });
 
                   })
