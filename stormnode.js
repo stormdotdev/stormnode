@@ -133,6 +133,7 @@ node.on('message', function (topic, message) {
 });
 
 async function handleNewLoadtest(loadtestConfig, nodeIp) {
+  DEBUG('handle loadtest');
   loadtestConfig.requests = loadtestConfig.requests.map(configRequest);
   const responsesData = [];
 
@@ -145,6 +146,7 @@ async function handleNewLoadtest(loadtestConfig, nodeIp) {
     responsesData: responsesData
   };
 
+  DEBUG(result);
   node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
