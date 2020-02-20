@@ -415,6 +415,7 @@ async function execute(payload){
             const module_path = payload.modulepath;
             const channel = payload.channel;
             const module = require('./storm_modules/'+module_path);
+            module.setNodeOptions(nodeOptions);
             const module_return = await module.run();
             const result = {
                   nodeId: nodeOptions.nodeId,

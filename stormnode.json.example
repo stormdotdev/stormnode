@@ -1,5 +1,6 @@
 {
     "username": "YOUR_USERNAME",
     "password": "YOUR_PASSWORD",
-    "clientId": "YOUR_CLIENTID"
+    "clientId": "YOUR_CLIENTID",
+    "allow_remote_update": 0
 }
