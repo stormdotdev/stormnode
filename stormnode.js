@@ -13,6 +13,7 @@ const argv = yargs
   .alias('c', 'config')
   .count('verbose')
   .alias('v', 'verbose')
+  .alias('r', 'removelock')
   .argv;
 
 const VERBOSE_LEVEL = argv.verbose;
@@ -33,6 +34,16 @@ if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
   process.exit(1);
 }
+
+
+
+if (argv.r) {
+  fs.unlink(lockFilePath(nodeOptions.nodeId), (err) => {
+    if (err) throw err;
+    console.log('The lock file has been removed. Now you can restart the node');
+  });
+}
+
 
 const mqtt = require('mqtt');
 const http = require('http');
@@ -58,7 +69,7 @@ node.on('disconnect', function (packet) {
       throw err;
     }
 
-    console.log(`lock file created at ${nodeLockFilePath}. Node won't restart until lock file exists.`);
+    console.log(`lock file created at ${nodeLockFilePath}. Node won't restart until lock file exists. Fix problem and run with -r angument for remove lock`);
     node.end();
   });
 });

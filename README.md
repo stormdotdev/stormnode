@@ -6,42 +6,12 @@
 
 NodeJs node for storm.dev node net
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-## Prerequisites
-
- - You must have an account on storm.dev to access our network. Please register [here](https://storm.dev/register) to join our community
- - NodeJs & npm
-
-## Setup
-
-clone this repo:
-> git clone https://github.com/stormdotdev/stormnode.git
-
-> cd stormnode
-
-> npm install
-
-## Configuration
-
-### simple method
-> download the json configuration file from your node page [here](https://storm.dev/mynodes) and put it in the same folder as stormnode.js
-
-### alternative
-create a stormnode.json file composed like this:
-```json
-{
-    "username": "user1",
-    "password": "password1",
-    "nodeId": "user-node1-node1"
-}
-```
+### What Is StormNode?
+Storm is an open network of virtual users to monitor and stress test your web applications and monitor your servers. Add your node to the network to earn free credits to contribute to the system.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Versioning
 
