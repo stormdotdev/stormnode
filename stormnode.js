@@ -13,6 +13,7 @@ const argv = yargs
   .alias('c', 'config')
   .count('verbose')
   .alias('v', 'verbose')
+  .alias('r', 'removelock')
   .argv;
 
 const VERBOSE_LEVEL = argv.verbose;
@@ -33,6 +34,16 @@ if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
   process.exit(1);
 }
+
+
+
+if (argv.r) {
+  fs.unlink(lockFilePath(nodeOptions.nodeId), (err) => {
+    if (err) throw err;
+    console.log('The lock file has been removed. Now you can restart the node');
+  });
+}
+
 
 const mqtt = require('mqtt');
 const http = require('http');
@@ -58,7 +69,7 @@ node.on('disconnect', function (packet) {
       throw err;
     }
 
-    console.log(`lock file created at ${nodeLockFilePath}. Node won't restart until lock file exists.`);
+    console.log(`lock file created at ${nodeLockFilePath}. Node won't restart until lock file exists. Fix problem and run with -r angument for remove lock`);
     node.end();
   });
 });
@@ -112,6 +123,9 @@ node.on('message', function (topic, message) {
             case 'endpointhealth':
                   handleEndpointhealth(payload, nodeIp);
                   break;
+            case 'hostmonitoring':
+                  handleHostMonitoring(payload, nodeIp);
+                  break;
             case 'subscribetopic':
                   subscribetopic(payload);
                   break;
@@ -124,9 +138,6 @@ node.on('message', function (topic, message) {
             case 'execute':
                   execute(payload);
                   break;
-            case 'hostmonitoring':
-                handleHostMonitoring(payload, nodeIp);
-                break;
             default:
                   break;
       }
@@ -165,7 +176,7 @@ async function handleEndpointhealth(csData, nodeIp) {
 
 async function handleHostMonitoring(payload, nodeIp) {
   DEBUG('handle hostmonitoring');
-  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring_base');
+  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring');
   const taskData = await hostmonitoring.run()
 
   const taskResult = {
@@ -417,6 +428,7 @@ async function execute(payload){
             const module_path = payload.modulepath;
             const channel = payload.channel;
             const module = require('./storm_modules/'+module_path);
+            module.setNodeOptions(nodeOptions);
             const module_return = await module.run();
             const result = {
                   nodeId: nodeOptions.nodeId,
