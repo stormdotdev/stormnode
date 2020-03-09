@@ -18,7 +18,7 @@ module.exports = {
 
                                           //Memory
                                           var mem = values[0];
-                                          var memory = [mem.total, mem.used];
+                                          var memory = [mem.total, mem.available];
 
                                           //Cpu
                                           var currentLoad = values[1];
