@@ -35,15 +35,12 @@ if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   process.exit(1);
 }
 
-
-
 if (argv.r) {
   fs.unlink(lockFilePath(nodeOptions.nodeId), (err) => {
     if (err) throw err;
     console.log('The lock file has been removed. Now you can restart the node');
   });
 }
-
 
 const mqtt = require('mqtt');
 const http = require('http');
@@ -94,53 +91,56 @@ node.on('message', function (topic, message) {
   DEBUG(message.toString());
   let payload;
 
-      try {
-            payload = JSON.parse(message.toString());
-      } catch (err) {
-            payload = null;
-      }
+  try {
+    payload = JSON.parse(message.toString());
+  } catch (err) {
+    payload = null;
+  }
 
-      if (!payload) {
-            return;
-      }
+  if (!payload) {
+    return;
+  }
 
-      if (!authorized(payload.authtype, payload.authdata)){
-            DEBUG('Command discarded');
-            return;
-      }
+  if (!authorized(payload.authtype, payload.authdata)){
+    DEBUG('Command discarded');
+    return;
+  }
 
-      if (!verifysign(payload.signature)){
-            DEBUG('invalid signature');
-            return;
-      }
+  if (!verifysign(payload.signature)){
+    DEBUG('invalid signature');
+    return;
+  }
 
-      const command = payload.command;
+  const command = payload.command;
 
-      switch (command) {
-            case 'loadtest':
-                  handleNewLoadtest(payload, nodeIp);
-                  break;
-            case 'endpointhealth':
-                  handleEndpointhealth(payload, nodeIp);
-                  break;
-            case 'hostmonitoring':
-                  handleHostMonitoring(payload, nodeIp);
-                  break;
-            case 'subscribetopic':
-                  subscribetopic(payload);
-                  break;
-            case 'unsubscribetopic':
-                  unsubscribetopic(payload);
-                  break;
-            case 'settime':
-                  setTime(payload.stormdevtime);
-                  break;
-            case 'execute':
-                  execute(payload);
-                  break;
-            default:
-                  break;
-      }
+  switch (command) {
+    case 'loadtest':
+      handleNewLoadtest(payload, nodeIp);
+      break;
+    case 'endpointhealth':
+      handleEndpointhealth(payload, nodeIp);
+      break;
+    case 'hostmonitoring':
+      handleHostMonitoring(payload, nodeIp);
+      break;
+    case 'customcommand':
+      handleCustomCommand(payload, nodeIp);
+      break;
+    case 'subscribetopic':
+      subscribetopic(payload);
+      break;
+    case 'unsubscribetopic':
+      unsubscribetopic(payload);
+      break;
+    case 'settime':
+      setTime(payload.stormdevtime);
+      break;
+    case 'execute':
+      execute(payload);
+      break;
+    default:
+      break;
+  }
 });
 
 async function handleNewLoadtest(loadtestConfig, nodeIp) {
@@ -177,7 +177,7 @@ async function handleEndpointhealth(csData, nodeIp) {
 async function handleHostMonitoring(payload, nodeIp) {
   DEBUG('handle hostmonitoring');
   const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring');
-  const taskData = await hostmonitoring.run()
+  const taskData = await hostmonitoring.run();
 
   const taskResult = {
     nodeIp: nodeIp,
@@ -186,6 +186,25 @@ async function handleHostMonitoring(payload, nodeIp) {
 
   DEBUG(taskResult);
   node.publish(`storm.dev/hostmonitoring/${payload.id}/${nodeOptions.nodeId}/results`, JSON.stringify(taskResult));
+}
+
+async function handleCustomCommand(payload, nodeIp) {
+  DEBUG('handle customcommand');
+
+  try {
+    const customcommand = require(`${__dirname}/storm_modules/custom/${payload.customcommand}`);
+    const taskData = await customcommand.run();
+  
+    const taskResult = {
+      nodeIp: nodeIp,
+      taskData: taskData
+    };
+
+    DEBUG(taskResult);
+    node.publish(`storm.dev/customcommand/${payload.id}/${nodeOptions.nodeId}/results`, JSON.stringify(taskResult));
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 function doRequest(config) {
@@ -336,8 +355,6 @@ function helloMessage(nodeIp,nodeId) {
 
 function sendHello() {
   return new Promise(function(resolve, reject) {
-    //return resolve({ip: '192.168.1.1'});
-
     https.get('https://storm.dev/api/hello?version='+VERSION+'&nodeid='+nodeOptions.nodeId, resp => {
       let data = '';
 
@@ -367,74 +384,73 @@ function requireNodeOptionsOrFail(config) {
 }
 
 function subscribetopic(payload){
-      node.subscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
-            if (err){
-                  console.log('Error could not subscribe in '+payload.newtopic+': '+ err.toString());
-            }
-      });
+  node.subscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+    if (err){
+      console.log('Error could not subscribe in '+payload.newtopic+': '+ err.toString());
+    }
+  });
 }
 
 function unsubscribetopic(payload){
-      node.unsubscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
-            if (err){
-                  console.log('Error could not unsubscribe '+payload.newtopic+': '+ err.toString());
-            }
-      });
+  node.unsubscribe('storm.dev/'+payload.newtopic+'/#', function (err) {
+    if (err){
+      console.log('Error could not unsubscribe '+payload.newtopic+': '+ err.toString());
+    }
+  });
 }
 
 function authorized(authtype, authdata) {
+  let auth = false;
 
-      let auth = false;
+  switch (authtype) {
+    case 'randomselect':
+      const randresult = Math.floor(Math.random() * (1000) + 1);
+      if (randresult<= authdata) auth = true;
+      break
+    case 'all':
+      auth = true;
+      break
+    default:
+      break;
+  }
 
-      switch (authtype) {
-            case 'randomselect':
-                  const randresult = Math.floor(Math.random() * (1000) + 1);
-                  if (randresult<= authdata) auth = true;
-                  break
-            case 'all':
-                  auth = true;
-                  break
-            default:
-                  break;
-      }
-
-      return auth;
+  return auth;
 }
 
 const stormdev_public_key =
-      '-----BEGIN PUBLIC KEY-----\n'+
-      'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
-      'w5EzO+LTrurzOpdjd1jgKLSR3wukzImNSGe+RV5kQ/adiaCbbu9oIIOgkKwI1a7E\n'+
-      '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
-      'i3+x54GsIT8V56acIwIDAQAB\n'+
-      '-----END PUBLIC KEY-----';
+  '-----BEGIN PUBLIC KEY-----\n'+
+  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfZKVjkyQKoZtj2jvsvHtoyLCc\n'+
+  'w5EzO+LTrurzOpdjd1jgKLSR3wukzImNSGe+RV5kQ/adiaCbbu9oIIOgkKwI1a7E\n'+
+  '+UPrgl6135KmlhEVG6oc2MysBLuheOJ3WaLGO22KYC/GYImm6AbYW1PNHv97Qjmz\n'+
+  'i3+x54GsIT8V56acIwIDAQAB\n'+
+  '-----END PUBLIC KEY-----';
 const RSAKey = new nodeRSA(stormdev_public_key);
 
 function verifysign(signature) {
-      const decrypted_sign = RSAKey.decryptPublic(signature, 'utf8');
-      DEBUG('decrypted: ', decrypted_sign);
-      var decrypted_sign_split = decrypted_sign.split("|");
-      const now = Date.now();
-      if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
-      return true;
+  const decrypted_sign = RSAKey.decryptPublic(signature, 'utf8');
+  DEBUG('decrypted: ', decrypted_sign);
+  var decrypted_sign_split = decrypted_sign.split('|');
+  const now = Date.now();
+  if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
+  return true;
 }
 
-function setTime(time){
-      stormdevTime = time;
-      deltaTime = Date.now() - stormdevTime;
+function setTime(time) {
+  stormdevTime = time;
+  deltaTime = Date.now() - stormdevTime;
 }
 
-async function execute(payload){
-            const module_path = payload.modulepath;
-            const channel = payload.channel;
-            const module = require('./storm_modules/'+module_path);
-            module.setNodeOptions(nodeOptions);
-            const module_return = await module.run();
-            const result = {
-                  nodeId: nodeOptions.nodeId,
-                  modulepath: module_path,
-                  return: module_return
-            };
-            console.log(JSON.stringify(result));
-            node.publish(`storm.dev/execute/${channel}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+async function execute(payload) {
+  const module_path = payload.modulepath;
+  const channel = payload.channel;
+  const module = require('./storm_modules/'+module_path);
+  module.setNodeOptions(nodeOptions);
+  const module_return = await module.run();
+  const result = {
+    nodeId: nodeOptions.nodeId,
+    modulepath: module_path,
+    return: module_return
+  };
+  DEBUG(result);
+  node.publish(`storm.dev/execute/${channel}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
