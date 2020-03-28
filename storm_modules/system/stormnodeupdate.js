@@ -6,32 +6,35 @@ module.exports = {
                               },
             run: function(){
 
-                  if (this.nodeOptions.allow_remote_update!=1) return('Remote update is not allowed');
+                  if (this.nodeOptions.allow_remote_update!=0){
+                    return new Promise(function(resolve, reject) {
+                          var string_return = "";
+                          var cp = require('child_process'),
+                              spawn = cp.spawn;
+                          var child;
 
-                  return new Promise(function(resolve, reject) {
-                        var string_return = "";
-                        var cp = require('child_process'),
-                            spawn = cp.spawn;
-                        var child;
+                          child = spawn('git', ['pull']);
+                          child.stdout.on('data', function (data) {
+                                var str = data.toString()
+                                string_return += str;
+                          });
 
-                        child = spawn('git', ['pull']);
-                        child.stdout.on('data', function (data) {
-                              var str = data.toString()
-                              string_return += str;
-                        });
+                          child2 = spawn('npm', ['install']).on('close', function() {
+                                      resolve(string_return);
+  					                          setTimeout(function(){
+                                                  return process.exit('reboot');
+                                            },5000);
+                              });
 
-                        child2 = spawn('npm', ['install']).on('close', function() {
-					resolve(string_return);
-					setTimeout(function(){
-                                                return process.exit('reboot');
-                                          },5000);
-                            });
+                          child2.stdout.on('data', function (data) {
+                                var str = data.toString();
+                                string_return += str;
+                          });
 
-                        child2.stdout.on('data', function (data) {
-                              var str = data.toString();
-                              string_return += str;
-                        });
+                    })
+                  }
+                  else return('Remote update is not allowed');
 
-                  })
+
             }
 }

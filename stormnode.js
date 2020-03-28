@@ -19,6 +19,8 @@ const argv = yargs
 const VERBOSE_LEVEL = argv.verbose;
 const DEBUG = function() { VERBOSE_LEVEL > 0 && console.log.apply(console, arguments); }
 
+DEBUG("ver. " +VERSION);
+
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -194,7 +196,7 @@ async function handleCustomCommand(payload, nodeIp) {
   try {
     const customcommand = require(`${__dirname}/storm_modules/custom/${payload.customcommand}`);
     const taskData = await customcommand.run();
-  
+
     const taskResult = {
       nodeIp: nodeIp,
       taskData: taskData
