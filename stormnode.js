@@ -195,6 +195,11 @@ async function handleCustomCommand(payload, nodeIp) {
 
   try {
     const customcommand = require(`${__dirname}/storm_modules/custom/${payload.customcommand}`);
+
+    if (typeof customcommand.setNodeOptions === 'function') {
+      customcommand.setNodeOptions(nodeOptions);
+    }
+
     const taskData = await customcommand.run();
 
     const taskResult = {
@@ -446,7 +451,11 @@ async function execute(payload) {
   const module_path = payload.modulepath;
   const channel = payload.channel;
   const module = require('./storm_modules/'+module_path);
-  module.setNodeOptions(nodeOptions);
+
+  if (typeof module.setNodeOptions === 'function') {
+    module.setNodeOptions(nodeOptions);
+  }
+
   const module_return = await module.run();
   const result = {
     nodeId: nodeOptions.nodeId,
