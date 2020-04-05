@@ -455,6 +455,10 @@ async function execute(payload) {
   if (typeof module.setNodeOptions === 'function') {
     module.setNodeOptions(nodeOptions);
   }
+  if (typeof module.setArguments === 'function') {
+    DEBUG(payload.arguments);
+    module.setArguments(payload.arguments);
+  }
 
   const module_return = await module.run();
   const result = {
