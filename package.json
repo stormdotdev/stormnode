@@ -1,6 +1,6 @@
 {
   "name": "stormclient",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "description": "Node client for storm.dev ",
   "main": "stormnode.js",
   "bin": {
