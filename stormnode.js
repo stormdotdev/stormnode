@@ -199,7 +199,9 @@ async function handleCustomCommand(payload, nodeIp) {
     if (typeof customcommand.setNodeOptions === 'function') {
       customcommand.setNodeOptions(nodeOptions);
     }
-
+    if (typeof customcommand.setArguments === 'function') {
+      customcommand.setArguments(payload.arguments);
+    }
     const taskData = await customcommand.run();
 
     const taskResult = {
