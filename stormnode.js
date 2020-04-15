@@ -32,6 +32,8 @@ const lockFilePath = function(nodeId) {
 
 const nodeOptions = requireNodeOptionsOrFail(argv.config);
 
+DEBUG("Node_id: " +nodeOptions.nodeId);
+
 if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
   process.exit(1);
