@@ -5,21 +5,22 @@ const VERSION = require(__dirname + '/package.json').version;
 const yargs = require('yargs');
 
 const argv = yargs
+  .detectLocale(false)
   .usage('$0 [ -c path-to-stormnode.json ]')
-  .help()
   .version(VERSION)
+  .help()
   .alias('h', 'help')
   .default('c', './stormnode.json')
   .alias('c', 'config')
   .count('verbose')
   .alias('v', 'verbose')
-  .alias('r', 'removelock')
+  .alias('r', 'removelock').describe('r', 'remove lock file and exit')
   .argv;
 
 const VERBOSE_LEVEL = argv.verbose;
 const DEBUG = function() { VERBOSE_LEVEL > 0 && console.log.apply(console, arguments); }
 
-DEBUG("ver. " +VERSION);
+DEBUG("ver. " + VERSION);
 
 const path = require('path');
 const os = require('os');
@@ -32,18 +33,17 @@ const lockFilePath = function(nodeId) {
 
 const nodeOptions = requireNodeOptionsOrFail(argv.config);
 
-DEBUG("Node_id: " +nodeOptions.nodeId);
+DEBUG("Node_id: " + nodeOptions.nodeId);
+
+if (argv.r) {
+  fs.unlinkSync(lockFilePath(nodeOptions.nodeId));
+  console.log('The lock file has been removed. Now you can restart the node');
+  process.exit(0);
+}
 
 if (fs.existsSync(lockFilePath(nodeOptions.nodeId))) {
   console.log('lock file exists');
   process.exit(1);
-}
-
-if (argv.r) {
-  fs.unlink(lockFilePath(nodeOptions.nodeId), (err) => {
-    if (err) throw err;
-    console.log('The lock file has been removed. Now you can restart the node');
-  });
 }
 
 const mqtt = require('mqtt');
