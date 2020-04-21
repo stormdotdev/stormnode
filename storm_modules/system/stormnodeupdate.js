@@ -1,40 +1,29 @@
+const path = require('path');
+const cp = require('child_process');
+
 module.exports = {
-            custom_signature: null, // not yet used - rsa public key or null
-            nodeOptions: null,
-            setNodeOptions: function(nodeOptions){
-                                    this.nodeOptions = nodeOptions;
-                              },
-            run: function(){
+  custom_signature: null, // not yet used - rsa public key or null
+  nodeOptions: null,
+  setNodeOptions: function(nodeOptions){
+    this.nodeOptions = nodeOptions;
+  },
+  run: function() {
+    if (this.nodeOptions.allow_remote_update) {
+      return Promise.reject();
+    }
 
-                  if (this.nodeOptions.allow_remote_update!=0){
-                    return new Promise(function(resolve, reject) {
-                          var string_return = "";
-                          var cp = require('child_process'),
-                              spawn = cp.spawn;
-                          var child;
-
-                          child = spawn('git', ['pull']);
-                          child.stdout.on('data', function (data) {
-                                var str = data.toString()
-                                string_return += str;
-                          });
-
-                          child2 = spawn('npm', ['install']).on('close', function() {
-                                      resolve(string_return);
-  					                          setTimeout(function(){
-                                                  return process.exit('reboot');
-                                            },5000);
-                              });
-
-                          child2.stdout.on('data', function (data) {
-                                var str = data.toString();
-                                string_return += str;
-                          });
-
-                    })
-                  }
-                  else return('Remote update is not allowed');
-
-
-            }
-}
+    return new Promise(function (resolve, reject) {
+      let string_return = '';
+      process.chdir(path.dirname(path.dirname(__dirname)));
+      let child1 = cp.spawnSync('git', ['pull']);
+      let child2 = cp.spawnSync('npm', ['install']);
+      resolve([
+            child1.stdout + child2.stdout,
+            child1.stderr + child2.stderr
+      ].join(''));
+      setTimeout(function () {
+        return process.exit(0);
+      }, 3000);
+    });
+  }
+};
