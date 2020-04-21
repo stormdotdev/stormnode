@@ -56,10 +56,7 @@ const MS_PER_NS = 1e6;
 const ownTopic = `storm.dev/nodes/${nodeOptions.nodeId}/status`;
 
 const node  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(nodeOptions, ownTopic));
-let helloData = null;
-let nodeIp = null;
-let stormdevTime = null;
-let deltaTime = null;
+let deltaTime = 0;
 
 // sent by broker on multiple connections from same node_id
 node.on('disconnect', function (packet) {
@@ -77,18 +74,13 @@ node.on('disconnect', function (packet) {
 
 node.on('connect', async function () {
   DEBUG('connected');
-  helloData = await sendHello();
-  nodeIp = helloData.ip;
-  setTime(helloData.stormdevtime);
   // general topic
   node.subscribe('storm.dev/general');
 
   // private topic
   node.subscribe(`storm.dev/nodes/${nodeOptions.nodeId}/direct`);
 
-  node.publish(ownTopic, JSON.stringify(helloMessage(nodeIp,nodeOptions.nodeId)), {
-    retain: true
-  });
+  node.publish(ownTopic, JSON.stringify(helloMessage()));
 });
 
 node.on('message', function (topic, message) {
@@ -119,16 +111,16 @@ node.on('message', function (topic, message) {
 
   switch (command) {
     case 'loadtest':
-      handleNewLoadtest(payload, nodeIp);
+      handleNewLoadtest(payload);
       break;
     case 'endpointhealth':
-      handleEndpointhealth(payload, nodeIp);
+      handleEndpointhealth(payload);
       break;
     case 'hostmonitoring':
-      handleHostMonitoring(payload, nodeIp);
+      handleHostMonitoring(payload);
       break;
     case 'customcommand':
-      handleCustomCommand(payload, nodeIp);
+      handleCustomCommand(payload);
       break;
     case 'subscribetopic':
       subscribetopic(payload);
@@ -147,7 +139,7 @@ node.on('message', function (topic, message) {
   }
 });
 
-async function handleNewLoadtest(loadtestConfig, nodeIp) {
+async function handleNewLoadtest(loadtestConfig) {
   DEBUG('handle loadtest');
   loadtestConfig.requests = loadtestConfig.requests.map(configRequest);
   const responsesData = [];
@@ -157,7 +149,6 @@ async function handleNewLoadtest(loadtestConfig, nodeIp) {
   }
 
   const result = {
-    nodeIp: nodeIp,
     responsesData: responsesData
   };
 
@@ -165,12 +156,11 @@ async function handleNewLoadtest(loadtestConfig, nodeIp) {
   node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
-async function handleEndpointhealth(csData, nodeIp) {
+async function handleEndpointhealth(csData) {
   DEBUG('handle endpoint');
   const responsesData = await doRequest(configRequest(csData.request));
 
   const result = {
-    nodeIp: nodeIp,
     responsesData: responsesData
   };
 
@@ -178,13 +168,12 @@ async function handleEndpointhealth(csData, nodeIp) {
   node.publish(`storm.dev/endpointhealth/${csData.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
-async function handleHostMonitoring(payload, nodeIp) {
+async function handleHostMonitoring(payload) {
   DEBUG('handle hostmonitoring');
   const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring');
   const taskData = await hostmonitoring.run();
 
   const taskResult = {
-    nodeIp: nodeIp,
     taskData: taskData
   };
 
@@ -192,7 +181,7 @@ async function handleHostMonitoring(payload, nodeIp) {
   node.publish(`storm.dev/hostmonitoring/${payload.id}/${nodeOptions.nodeId}/results`, JSON.stringify(taskResult));
 }
 
-async function handleCustomCommand(payload, nodeIp) {
+async function handleCustomCommand(payload) {
   DEBUG('handle customcommand');
 
   try {
@@ -207,7 +196,6 @@ async function handleCustomCommand(payload, nodeIp) {
     const taskData = await customcommand.run();
 
     const taskResult = {
-      nodeIp: nodeIp,
       taskData: taskData
     };
 
@@ -346,41 +334,15 @@ function buildConnectOptions(nodeOptions, ownTopic) {
   return {
     username: nodeOptions.username,
     password: nodeOptions.password,
-    clientId: process.env.STORM_NODEID || nodeOptions.nodeId,
-    protocolVersion: 5,
-    will: {
-      topic: ownTopic,
-      payload: null,
-      retain: true
-    }
+    clientId: process.env.STORM_NODEID || nodeOptions.nodeId
   };
 }
 
-function helloMessage(nodeIp,nodeId) {
+function helloMessage() {
   return {
-    command: 'online',
-    ip: nodeIp,
-    nodeId: nodeId
+    command: 'hello',
+    version: VERSION,
   };
-}
-
-function sendHello() {
-  return new Promise(function(resolve, reject) {
-    https.get('https://storm.dev/api/hello?version='+VERSION+'&nodeid='+nodeOptions.nodeId, resp => {
-      let data = '';
-
-      resp.on('data', chunk => {
-        data += chunk;
-      });
-
-      resp.on('end', () => {
-        resolve(JSON.parse(data));
-      });
-    }).on('error', err => {
-      console.log(err.message);
-      reject(null);
-    });
-  });
 }
 
 function requireNodeOptionsOrFail(config) {
@@ -447,8 +409,7 @@ function verifysign(signature) {
 }
 
 function setTime(time) {
-  stormdevTime = time;
-  deltaTime = Date.now() - stormdevTime;
+  deltaTime = Date.now() - time;
 }
 
 async function execute(payload) {

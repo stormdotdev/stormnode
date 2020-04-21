@@ -1,6 +1,6 @@
 {
   "name": "stormclient",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "description": "Node client for storm.dev",
   "main": "stormnode.js",
   "bin": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stormdotdev/stormcnet.git"
+    "url": "git+https://github.com/stormdotdev/stormnode.git"
   },
   "keywords": [
     "stormdev",
@@ -24,7 +24,7 @@
     "mqtt",
     "nodenet",
     "decentralized",
-    "distrubuited"
+    "distributed"
   ],
   "author": "storm.dev",
   "license": "MIT",
