@@ -141,7 +141,6 @@ node.on('message', function (topic, message) {
 
 async function handleNewLoadtest(loadtestConfig) {
   DEBUG('handle loadtest');
-  loadtestConfig.requests = loadtestConfig.requests.map(configRequest);
   const responsesData = [];
 
   for (const config of loadtestConfig.requests) {
@@ -158,7 +157,7 @@ async function handleNewLoadtest(loadtestConfig) {
 
 async function handleEndpointhealth(csData) {
   DEBUG('handle endpoint');
-  const responsesData = await doRequest(configRequest(csData.request));
+  const responsesData = await doRequest(csData.request);
 
   const result = {
     responsesData: responsesData
@@ -170,7 +169,7 @@ async function handleEndpointhealth(csData) {
 
 async function handleHostMonitoring(payload) {
   DEBUG('handle hostmonitoring');
-  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring');
+  const hostmonitoring = require(__dirname + '/storm_modules/system/hostmonitoring.js');
   const taskData = await hostmonitoring.run();
 
   const taskResult = {
@@ -190,9 +189,11 @@ async function handleCustomCommand(payload) {
     if (typeof customcommand.setNodeOptions === 'function') {
       customcommand.setNodeOptions(nodeOptions);
     }
+
     if (typeof customcommand.setArguments === 'function') {
       customcommand.setArguments(payload.arguments);
     }
+
     const taskData = await customcommand.run();
 
     const taskResult = {
@@ -287,10 +288,6 @@ function doRequest(config) {
   });
 }
 
-function configRequest(requestConfig) {
-  return requestConfig;
-}
-
 /**
 * Get duration in milliseconds from process.hrtime()
 * @function getHrTimeDurationInMs
@@ -378,11 +375,15 @@ function authorized(authtype, authdata) {
   switch (authtype) {
     case 'randomselect':
       const randresult = Math.floor(Math.random() * (1000) + 1);
-      if (randresult<= authdata) auth = true;
-      break
+
+      if (randresult <= authdata) {
+        auth = true;
+      }
+
+      break;
     case 'all':
       auth = true;
-      break
+      break;
     default:
       break;
   }
@@ -401,10 +402,13 @@ const RSAKey = new nodeRSA(stormdev_public_key);
 
 function verifysign(signature) {
   const decrypted_sign = RSAKey.decryptPublic(signature, 'utf8');
-  DEBUG('decrypted: ', decrypted_sign);
-  var decrypted_sign_split = decrypted_sign.split('|');
+  const decrypted_sign_split = decrypted_sign.split('|');
   const now = Date.now();
-  if (Math.abs(now - deltaTime - decrypted_sign_split[1])> 60000 ) return false;
+
+  if (Math.abs(now - deltaTime - decrypted_sign_split[1]) > 60000) {
+    return false;
+  }
+
   return true;
 }
 
@@ -414,14 +418,13 @@ function setTime(time) {
 
 async function execute(payload) {
   const module_path = payload.modulepath;
-  const channel = payload.channel;
-  const module = require('./storm_modules/'+module_path);
+  const module = require(getStormModuleDir(module_path));
 
   if (typeof module.setNodeOptions === 'function') {
     module.setNodeOptions(nodeOptions);
   }
+
   if (typeof module.setArguments === 'function') {
-    DEBUG(payload.arguments);
     module.setArguments(payload.arguments);
   }
 
@@ -432,5 +435,13 @@ async function execute(payload) {
     return: module_return
   };
   DEBUG(result);
-  node.publish(`storm.dev/execute/${channel}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+
+  if (payload.channel) {
+    node.publish(`storm.dev/execute/${payload.channel}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+  }
+}
+
+function getStormModuleDir(module_path) {
+  const moduleDir = module_path.startsWith('custom/') ? 'custom' : 'system';
+  return path.join(__dirname, 'storm_modules', moduleDir, path.basename(module_path));
 }
