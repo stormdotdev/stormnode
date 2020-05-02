@@ -8,7 +8,7 @@ module.exports = {
     this.nodeOptions = nodeOptions;
   },
   run: function() {
-    if (this.nodeOptions.allow_remote_update) {
+    if (!this.nodeOptions.allow_remote_update) {
       return Promise.reject();
     }
 
