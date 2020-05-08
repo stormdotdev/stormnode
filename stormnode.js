@@ -26,6 +26,7 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const nodeRSA = require('node-rsa');
+const events = require('events');
 
 const lockFilePath = function(nodeId) {
   return [os.tmpdir(), `storm-node-${nodeId}.lock`].join(path.sep);
@@ -57,6 +58,8 @@ const ownTopic = `storm.dev/nodes/${nodeOptions.nodeId}/status`;
 
 const node  = mqtt.connect(process.env.STORM_CONNECT_URL || 'mqtts://nodenet.storm.dev:8883', buildConnectOptions(nodeOptions, ownTopic));
 let deltaTime = 0;
+
+const eventEmitter = new events.EventEmitter();
 
 // sent by broker on multiple connections from same node_id
 node.on('disconnect', function (packet) {
@@ -113,6 +116,9 @@ node.on('message', function (topic, message) {
     case 'loadtest':
       handleNewLoadtest(payload);
       break;
+    case 'manageloadtest':
+      handleManageLoadtest(topic, payload);
+      break;
     case 'endpointhealth':
       handleEndpointhealth(payload);
       break;
@@ -140,11 +146,55 @@ node.on('message', function (topic, message) {
 });
 
 async function handleNewLoadtest(loadtestConfig) {
-  DEBUG('handle loadtest');
-  const responsesData = [];
+  DEBUG('handle loadtest ' + (loadtestConfig.uuid || ''));
 
-  for (const config of loadtestConfig.requests) {
-    responsesData.push(await doRequest(config));
+  let shouldHaltExecution = false;
+
+  // *** Register an event handler and subscribe to a loadtest-specific topic, used to manage the ongoing test if requested
+  const loadtestTopic = `storm.dev/loadtests/${loadtestConfig.uuid}/manage`;
+
+  const eventHandler = function (data) {
+    if(data.action) {
+      if(data.action === 'halt') {
+        shouldHaltExecution = true;
+      } else {
+        DEBUG(`Loadtest event received with unhandled action ${data.action}, ignoring`);  
+      }
+    } else {
+      DEBUG("Loadtest event received without action, ignoring");
+    }
+  };
+
+  if(loadtestConfig.uuid) {
+    node.subscribe(loadtestTopic);
+    eventEmitter.on(loadtestConfig.uuid, eventHandler.bind(shouldHaltExecution));
+  }
+  // ***
+
+  var iterateUntilTs = null;
+  if(loadtestConfig.additionalData) {
+    iterateUntilTs = loadtestConfig.additionalData.iterateUntilTs;
+  }
+
+  const responsesData = [];
+  do {
+    for (const config of loadtestConfig.requests) {
+      if(shouldHaltExecution) {
+        DEBUG('halting loadtest execution');
+        break;
+      }
+
+      responsesData.push(await doRequest(config));
+    }
+  } while(
+    !shouldHaltExecution
+    && iterateUntilTs !== null
+    && iterateUntilTs > Math.floor(Date.now() / 1000)
+  );
+
+  if(loadtestConfig.uuid) {
+    node.unsubscribe(loadtestTopic);
+    eventEmitter.off(loadtestConfig.uuid, eventHandler);
   }
 
   const result = {
@@ -153,6 +203,15 @@ async function handleNewLoadtest(loadtestConfig) {
 
   DEBUG(result);
   node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
+}
+
+function handleManageLoadtest(topic, payload) {
+  DEBUG('handle manage loadtest');
+
+  const loadtestUuid = topicToLoadtestUuid(topic);
+  if(loadtestUuid) {
+    eventEmitter.emit(loadtestUuid, {action: payload.action})
+  }
 }
 
 async function handleEndpointhealth(csData) {
@@ -444,4 +503,8 @@ async function execute(payload) {
 function getStormModuleDir(module_path) {
   const moduleDir = module_path.startsWith('custom/') ? 'custom' : 'system';
   return path.join(__dirname, 'storm_modules', moduleDir, path.basename(module_path));
+}
+
+function topicToLoadtestUuid(topic) {
+  return topic.match(/storm\.dev\/loadtests\/([-_a-z0-9]+)\/manage/)[1];
 }
