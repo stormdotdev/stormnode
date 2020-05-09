@@ -9,7 +9,18 @@ module.exports = {
                                     this.arguments = arguments;
                               },
             run: function(){
-                  var commands = this.arguments;
+                  var args = this.arguments;
+                  var commands =  [
+                      {
+                          command: 'git clone ' + args.repository + ' ' + args.installation_name,
+                          path: 'storm_modules/custom'
+                      },
+                      {
+                          command: 'npm i',
+                          path: 'storm_modules/custom/' + args.installation_name
+                      },
+                  ];
+
                   if (this.nodeOptions.allow_remote_plugins_installation!=0){
                     return new Promise(function(resolve, reject) {
 
