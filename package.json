@@ -34,8 +34,8 @@
   "homepage": "https://github.com/stormdotdev/stormnode#readme",
   "dependencies": {
     "mqtt": "^3.0.0",
-    "node-rsa": "^1.0.7",
-    "systeminformation": "^4.21.1",
-    "yargs": "^15.0.2"
+    "node-rsa": "^1.0.8",
+    "systeminformation": "^4.25.1",
+    "yargs": "^15.3.1"
   }
 }
