@@ -176,7 +176,6 @@ async function handleNewLoadtest(loadtestConfig) {
     iterateUntilTs = loadtestConfig.additionalData.iterateUntilTs;
   }
 
-  const responsesData = [];
   do {
     for (const config of loadtestConfig.requests) {
       if(shouldHaltExecution) {
@@ -184,7 +183,12 @@ async function handleNewLoadtest(loadtestConfig) {
         break;
       }
 
-      responsesData.push(await doRequest(config));
+      const result = {
+        responsesData: [await doRequest(config)]
+      };
+
+      DEBUG(result);
+      node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
     }
   } while(
     !shouldHaltExecution
@@ -196,13 +200,6 @@ async function handleNewLoadtest(loadtestConfig) {
     node.unsubscribe(loadtestTopic);
     eventEmitter.off(loadtestConfig.uuid, eventHandler);
   }
-
-  const result = {
-    responsesData: responsesData
-  };
-
-  DEBUG(result);
-  node.publish(`storm.dev/loadtest/${loadtestConfig.id}/${nodeOptions.nodeId}/results`, JSON.stringify(result));
 }
 
 function handleManageLoadtest(topic, payload) {
@@ -365,6 +362,7 @@ function getHrTimeDurationInMs (startTime, endTime) {
 function newTimings() {
   return {
     startAt: process.hrtime(),
+    startAtMs: new Date().getTime(),
     dnsLookupAt: null,
     tcpConnectionAt: null,
     tlsHandshakeAt: null,
@@ -377,6 +375,7 @@ function timingsDone(timings) {
   const tlsHandshake = timings.tlsHandshakeAt !== null ? timings.tcpConnectionAt - timings.tlsHandshakeAt : null;
 
   return {
+    startAtMs: timings.startAtMs,
     dnsLookup: timings.dnsLookupAt !== null ? getHrTimeDurationInMs(timings.startAt, timings.dnsLookupAt) : null,
     tcpConnection: getHrTimeDurationInMs(timings.dnsLookupAt || timings.startAt, timings.tcpConnectionAt),
     tlsHandshake: timings.tlsHandshakeAt !== null ? getHrTimeDurationInMs(timings.tcpConnectionAt, timings.tlsHandshakeAt) : null,
