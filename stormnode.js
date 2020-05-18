@@ -167,7 +167,7 @@ async function handleNewLoadtest(loadtestConfig) {
 
   if(loadtestConfig.uuid) {
     node.subscribe(loadtestTopic);
-    eventEmitter.on(loadtestConfig.uuid, eventHandler.bind(shouldHaltExecution));
+    eventEmitter.on(loadtestConfig.uuid, eventHandler);
   }
   // ***
 
