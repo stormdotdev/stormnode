@@ -16,7 +16,7 @@ module.exports = {
                           path: 'storm_modules/custom'
                       },
                       {
-                          command: 'npm i',
+                          command: 'npm install --production',
                           path: 'storm_modules/custom/' + args.installation_name
                       },
                   ];

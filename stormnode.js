@@ -463,7 +463,7 @@ function verifysign(signature) {
   const decrypted_sign_split = decrypted_sign.split('|');
   const now = Date.now();
 
-  if (Math.abs(now - deltaTime - decrypted_sign_split[1]) > 60000) {
+  if (Math.abs(now - deltaTime - decrypted_sign_split[1]) > 1800000) {
     return false;
   }
 

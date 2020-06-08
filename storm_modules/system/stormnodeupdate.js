@@ -16,7 +16,7 @@ module.exports = {
       let string_return = '';
       process.chdir(path.dirname(path.dirname(__dirname)));
       let child1 = cp.spawnSync('git', ['pull']);
-      let child2 = cp.spawnSync('npm', ['install']);
+      let child2 = cp.spawnSync('npm', ['install', '--production']);
       resolve([
             child1.stdout + child2.stdout,
             child1.stderr + child2.stderr

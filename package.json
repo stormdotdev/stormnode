@@ -1,13 +1,10 @@
 {
   "name": "stormclient",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "description": "Node client for storm.dev",
   "main": "stormnode.js",
   "bin": {
     "stormnode": "./stormnode.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
