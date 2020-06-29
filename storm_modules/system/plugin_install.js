@@ -1,52 +1,73 @@
+const path = require('path');
+const fs = require('fs');
+
 module.exports = {
-            custom_signature: null, // not yet used - rsa public key or null
-            nodeOptions: null,
-            arguments: null,
-            setNodeOptions: function(nodeOptions){
-                                    this.nodeOptions = nodeOptions;
-                              },
-            setArguments: function(arguments){
-                                    this.arguments = arguments;
-                              },
-            run: function(){
-                  var args = this.arguments;
-                  var commands =  [
-                      {
-                          command: 'git clone ' + args.repository + ' ' + args.installation_name,
-                          path: 'storm_modules/custom'
-                      },
-                      {
-                          command: 'npm install --production',
-                          path: 'storm_modules/custom/' + args.installation_name
-                      },
-                  ];
+  nodeOptions: null,
+  arguments: null,
+  setNodeOptions: function (nodeOptions) {
+    this.nodeOptions = nodeOptions;
+  },
+  setArguments: function (arguments) {
+    this.arguments = arguments;
+  },
+  run: function () {
+    if (this.nodeOptions.allow_remote_plugins_installation == 0) {
+      return Promise.reject({
+        error_message: 'plugin installation is not allowed'
+      });
+    }
 
-                  if (this.nodeOptions.allow_remote_plugins_installation!=0){
-                    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
+      try {
+        const installPath = path.join('storm_modules/custom', this.arguments.installation_name);
+        const commands = [];
 
-                          var string_return = "";
-                          const { exec } = require('child_process');
+        if (!fs.existsSync(installPath)) {
+          commands.push({
+            command: 'git clone ' + this.arguments.repository + ' ' + this.arguments.installation_name,
+            path: 'storm_modules/custom'
+          });
+        } else {
+          commands.push({
+            command: 'git pull',
+            path: installPath
+          });
+        }
 
+        commands.push({
+          command: 'npm install --production',
+          path: installPath
+        });
 
-                          var exec_commands = (commands) => {
-                            var command = commands.shift()
-                            exec(command.command, {cwd: command.path}, (error, stdout, stderr) => {
+        let string_return = '';
+        const { exec } = require('child_process');
 
-                              if(stdout) string_return += stdout;
-                              if(stderr) string_return += stderr;
-
-                              if(commands.length) exec_commands(commands)
-                              else resolve(string_return);
-                            });
-                          }
-
-                          exec_commands(commands)
-
-
-                    })
-                  }
-                  else return('plugin installation is not allowed');
-
-
+        const exec_commands = (commands) => {
+          const commandConfig = commands.shift();
+          exec(commandConfig.command, { cwd: commandConfig.path }, (error, stdout, stderr) => {
+            if (stdout) {
+              string_return += stdout;
             }
+
+            if (stderr) {
+              string_return += stderr;
+            }
+
+            if (commands.length) {
+              exec_commands(commands);
+            } else {
+              resolve(string_return);
+            }
+          });
+        };
+
+        exec_commands(commands);
+      } catch (e) {
+        console.log(e);
+        reject({
+          error: e.toString()
+        });
+      }
+    });
+  }
 }
