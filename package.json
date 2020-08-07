@@ -1,6 +1,6 @@
 {
   "name": "stormclient",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "description": "Node client for storm.dev",
   "main": "stormnode.js",
   "bin": {
@@ -15,8 +15,7 @@
     "storm.dev",
     "stormdotdev",
     "storm",
-    "test",
-    "load",
+    "load test",
     "nodejs",
     "mqtt",
     "nodenet",
@@ -30,9 +29,9 @@
   },
   "homepage": "https://github.com/stormdotdev/stormnode#readme",
   "dependencies": {
-    "mqtt": "^3.0.0",
-    "node-rsa": "^1.0.8",
-    "systeminformation": "^4.25.1",
-    "yargs": "^15.3.1"
+    "mqtt": "^4.1.0",
+    "node-rsa": "^1.1.1",
+    "systeminformation": "^4.26.10",
+    "yargs": "^15.4.1"
   }
 }
